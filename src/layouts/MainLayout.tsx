@@ -33,6 +33,7 @@ import VersionUpgradeModal from '@/components/modals/version-upgrade-modal/Versi
 import { lt } from 'semver';
 import { isAdminUserOrRole } from '@/utils/UserMgmtUtils';
 import { ExternalLinks } from '@/constants/LinkAndImageConstants';
+import Sidebar from '@/components/Sidebar/Sidebar';
 
 const { Content, Sider } = Layout;
 
@@ -440,139 +441,13 @@ export default function MainLayout() {
   return (
     <AppErrorBoundary key={location.pathname}>
       <Layout hasSider>
-        <Sider
-          collapsible
-          collapsed={isSidebarCollapsed}
-          onCollapse={(isCollapsed) => {
-            setIsSidebarCollapsed(isCollapsed);
-            store.setIsSidebarCollapsed(isCollapsed);
-          }}
-          collapsedWidth={isSmallScreen ? 0 : SIDE_NAV_COLLAPSED_WIDTH}
-          width={SIDE_NAV_EXPANDED_WIDTH}
-          theme="light"
-          style={{
-            height: '100vh',
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            borderRight: `1px solid ${themeToken.colorBorder}`,
-            zIndex: 1000,
-          }}
-          zeroWidthTriggerStyle={{
-            border: `2px solid ${store.currentTheme === 'dark' ? branding.primaryColorDark : branding.primaryColorLight}`,
-            background: 'transparent',
-            borderLeft: 'none',
-            color: store.currentTheme === 'dark' ? branding.primaryColorDark : branding.primaryColorLight,
-            top: 0,
-          }}
-          breakpoint="lg"
-          onBreakpoint={(broken: boolean) => {
-            setIsSmallScreen(broken);
-          }}
-        >
-          {/* logo */}
-          <Link to={resolveAppRoute(AppRoutes.DASHBOARD_ROUTE)}>
-            <img
-              loading="eager"
-              referrerPolicy="no-referrer"
-              src={sidebarLogo}
-              alt={branding.logoAltText}
-              style={{ width: '100%', padding: '1rem 2rem 1rem 2rem' }}
-            />
-          </Link>
-
-          <Menu
-            theme="light"
-            mode="inline"
-            selectedKeys={getActiveSideNavKeys()}
-            items={sideNavItems}
-            openKeys={openSidebarMenus}
-            style={{ borderRight: 'none' }}
-            id="side-nav"
-            onOpenChange={(keys: string[]) => {
-              setOpenSidebarMenus(keys);
-            }}
-            onClick={(menu) => {
-              switch (menu.key) {
-                case 'dashboard':
-                  navigate(resolveAppRoute(AppRoutes.DASHBOARD_ROUTE));
-                  break;
-                case 'all-networks':
-                  navigate(resolveAppRoute(AppRoutes.NETWORKS_ROUTE));
-                  break;
-                case 'hosts':
-                  navigate(resolveAppRoute(AppRoutes.HOSTS_ROUTE));
-                  break;
-                case 'clients':
-                  navigate(resolveAppRoute(AppRoutes.CLIENTS_ROUTE));
-                  break;
-                case 'enrollment-keys':
-                  navigate(resolveAppRoute(AppRoutes.ENROLLMENT_KEYS_ROUTE));
-                  break;
-                case 'amui':
-                  window.location = getAmuiUrl() as any;
-                  break;
-                case 'amuitenants':
-                  window.location = getAmuiTenantsUrl() as any;
-                  break;
-                case 'users':
-                  navigate(resolveAppRoute(AppRoutes.USERS_ROUTE));
-                  break;
-                case 'documentation':
-                  window.open(ExternalLinks.UI_DOCS_URL, '_blank');
-                  break;
-                default:
-                  if (menu.key.startsWith('networks/')) {
-                    navigate(getNetworkRoute(menu.key.replace('networks/', '')));
-                  } else if (menu.key.startsWith('hosts/')) {
-                    navigate(getHostRoute(menu.key.replace('hosts/', '')));
-                  }
-                  break;
-              }
-            }}
-          />
-
-          {/* server version */}
-          {!isSidebarCollapsed && (
-            <div className="version-box" style={{ marginTop: '1rem', padding: '0rem 1.5rem', fontSize: '.8rem' }}>
-              <div
-                style={{
-                  fontSize: '.8rem',
-                  cursor: canUpgrade ? 'pointer' : '',
-                }}
-                title={canUpgrade ? 'A new version is available. Click to show version upgrade steps' : ''}
-                onClick={() => openVersionUpgradeModal()}
-              >
-                <Typography.Text style={{ fontSize: 'inherit' }}>
-                  UI: {ServerConfigService.getUiVersion()}{' '}
-                  {isSaasBuild && !BrowserStore.hasNmuiVersionSynced() && <LoadingOutlined />}
-                  {canUpgrade && <CloudSyncOutlined style={{ marginLeft: '.5rem' }} className="update-btn" />}
-                </Typography.Text>
-                <br />
-                <Typography.Text style={{ fontSize: 'inherit' }}>
-                  Server: {store.serverConfig?.Version ?? 'n/a'}
-                </Typography.Text>
-              </div>
-            </div>
-          )}
-
-          {/* bottom items */}
-          <Menu
-            theme="light"
-            mode="inline"
-            selectable={false}
-            items={sideNavBottomItems}
-            style={{ borderRight: 'none', position: 'absolute', bottom: '0' }}
-          />
-        </Sider>
+        <Sidebar />
 
         {/* main content */}
         <Layout
           className="site-layout"
           style={{
             transition: 'all 200ms',
-            marginLeft: contentMarginLeft,
             display: hideContent ? 'none' : 'block',
             position: 'relative',
           }}

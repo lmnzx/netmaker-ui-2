@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.4.0",
+    "@heroicons/react": "^2.1.5",
     "@react-sigma/core": "^3.4.2",
     "@tailwindcss/typography": "^0.5.15",
     "animate.css": "^4.1.1",
