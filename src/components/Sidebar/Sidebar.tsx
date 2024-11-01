@@ -14,7 +14,8 @@ import {
   ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
   ShieldCheckIcon as ShieldCheckIconSolid,
   ChartBarSquareIcon as ChartBarSquareIconSolid,
-  EllipsisHorizontalIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/react/20/solid';
 
 import {
@@ -34,94 +35,135 @@ import {
 
 import LogoBlock from './components/LogoBlock';
 import MenuRow from './components/MenuRow';
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppRoutes } from '@/routes';
+import NetworkDropdown from './components/NetworkDropdown';
+import AccountDropdown from './components/AccountDropdown';
+import { useStore } from '@/store/store';
+import AddNetworkModal from '../modals/add-network-modal/AddNetworkModal';
+import { getAmuiTenantsUrl } from '@/utils/RouteUtils';
 
 const Sidebar = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isTenantCollapsed, setIsTenantCollapsed] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('');
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [isNetworkDropdownOpen, setIsNetworkDropdownOpen] = useState(false);
+  const [isAddNetworkModalOpen, setIsAddNetworkModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const autoFillButtonRef = useRef(null);
+  const networkNameInputRef = useRef(null);
+  const ipv4InputRef = useRef(null);
+  const ipv6InputRef = useRef(null);
+  const defaultAclInputRef = useRef(null);
+  const submitButtonRef = useRef(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+
+  const store = useStore();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    {
-      title: 'Dashboard',
-      iconSolid: <Squares2X2IconSolid className="size-6" />,
-      iconOutline: <Squares2X2IconOutline className="size-6" />,
-      route: AppRoutes.DASHBOARD_ROUTE,
-    },
-    {
-      title: 'Devices',
-      iconSolid: <DevicePhoneMobileIconSolid className="size-6" />,
-      iconOutline: <DevicePhoneMobileIconOutline className="size-6" />,
-      route: AppRoutes.HOSTS_ROUTE,
-    },
-    {
-      title: 'Users',
-      iconSolid: <UsersIconSolid className="size-6" />,
-      iconOutline: <UsersIconOutline className="size-6" />,
-      route: AppRoutes.USERS_ROUTE,
-    },
-    {
-      title: 'Keys',
-      iconSolid: <KeyIconSolid className="size-6" />,
-      iconOutline: <KeyIconOutline className="size-6" />,
-      route: AppRoutes.ENROLLMENT_KEYS_ROUTE,
-    },
-  ];
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
 
-  const networkMenuItems = [
-    {
-      title: 'Networks',
-      iconSolid: <GlobeAltIconSolid className="size-6" />,
-      iconOutline: <GlobeAltIconOutline className="size-6" />,
-      route: AppRoutes.NETWORKS_ROUTE,
-      rightIcon: 'ellipsis',
-    },
-    {
-      title: 'Nodes',
-      iconSolid: <ComputerDesktopIconSolid className="size-6" />,
-      iconOutline: <ComputerDesktopIconOutline className="size-6" />,
-      route: null,
-    },
-    {
-      title: 'Remote Access',
-      iconSolid: <ViewfinderCircleIconSolid className="size-6" />,
-      iconOutline: <ViewfinderCircleIconOutline className="size-6" />,
-      route: null,
-    },
-    {
-      title: 'Relays',
-      iconSolid: <ArrowPathIconSolid className="size-6" />,
-      iconOutline: <ArrowPathIconOutline className="size-6" />,
-      route: null,
-    },
-    {
-      title: 'Egress',
-      iconSolid: <ArrowUpTrayIconSolid className="size-6" />,
-      iconOutline: <ArrowUpTrayIconOutline className="size-6" />,
-      route: null,
-    },
-    {
-      title: 'Gateways',
-      iconSolid: <ArrowsRightLeftIconSolid className="size-6" />,
-      iconOutline: <ArrowsRightLeftIconOutline className="size-6" />,
-      route: null,
-    },
-    {
-      title: 'Access Control',
-      iconSolid: <ShieldCheckIconSolid className="size-6" />,
-      iconOutline: <ShieldCheckIconOutline className="size-6" />,
-      route: null,
-    },
-    {
-      title: 'Analytics',
-      iconSolid: <ChartBarSquareIconSolid className="size-6" />,
-      iconOutline: <ChartBarSquareIconOutline className="size-6" />,
-      route: null,
-    },
-  ];
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  const menuItems = useMemo(
+    () => [
+      {
+        title: 'Dashboard',
+        iconSolid: <Squares2X2IconSolid className="size-6" />,
+        iconOutline: <Squares2X2IconOutline className="size-6" />,
+        route: AppRoutes.DASHBOARD_ROUTE,
+      },
+      {
+        title: 'Devices',
+        iconSolid: <DevicePhoneMobileIconSolid className="size-6" />,
+        iconOutline: <DevicePhoneMobileIconOutline className="size-6" />,
+        route: AppRoutes.HOSTS_ROUTE,
+      },
+      {
+        title: 'Users',
+        iconSolid: <UsersIconSolid className="size-6" />,
+        iconOutline: <UsersIconOutline className="size-6" />,
+        route: AppRoutes.USERS_ROUTE,
+      },
+      {
+        title: 'Keys',
+        iconSolid: <KeyIconSolid className="size-6" />,
+        iconOutline: <KeyIconOutline className="size-6" />,
+        route: AppRoutes.ENROLLMENT_KEYS_ROUTE,
+      },
+    ],
+    [],
+  );
+
+  const networkMenuItems = useMemo(
+    () => [
+      {
+        title: 'Networks',
+        iconSolid: <GlobeAltIconSolid className="size-6" />,
+        iconOutline: <GlobeAltIconOutline className="size-6" />,
+        route: AppRoutes.NETWORKS_ROUTE,
+        rightIcon: 'ellipsis',
+      },
+      {
+        title: 'Nodes',
+        iconSolid: <ComputerDesktopIconSolid className="size-6" />,
+        iconOutline: <ComputerDesktopIconOutline className="size-6" />,
+        route: null,
+      },
+      {
+        title: 'Remote Access',
+        iconSolid: <ViewfinderCircleIconSolid className="size-6" />,
+        iconOutline: <ViewfinderCircleIconOutline className="size-6" />,
+        route: null,
+      },
+      {
+        title: 'Relays',
+        iconSolid: <ArrowPathIconSolid className="size-6" />,
+        iconOutline: <ArrowPathIconOutline className="size-6" />,
+        route: null,
+      },
+      {
+        title: 'Egress',
+        iconSolid: <ArrowUpTrayIconSolid className="size-6" />,
+        iconOutline: <ArrowUpTrayIconOutline className="size-6" />,
+        route: null,
+      },
+      {
+        title: 'Gateways',
+        iconSolid: <ArrowsRightLeftIconSolid className="size-6" />,
+        iconOutline: <ArrowsRightLeftIconOutline className="size-6" />,
+        route: null,
+      },
+      {
+        title: 'Access Control',
+        iconSolid: <ShieldCheckIconSolid className="size-6" />,
+        iconOutline: <ShieldCheckIconOutline className="size-6" />,
+        route: null,
+      },
+      {
+        title: 'Analytics',
+        iconSolid: <ChartBarSquareIconSolid className="size-6" />,
+        iconOutline: <ChartBarSquareIconOutline className="size-6" />,
+        route: null,
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -129,14 +171,11 @@ const Sidebar = () => {
     if (currentMenuItem) {
       setSelectedMenu(currentMenuItem.title);
     }
-  }, [location]);
-
-  useEffect(() => {
-    console.log('Selected menu:', selectedMenu);
-  }, [selectedMenu]);
+  }, [location, menuItems, networkMenuItems]);
 
   const handleMenuClick = (title: string) => {
     setSelectedMenu(title);
+    setIsMobileMenuOpen(false);
   };
 
   const toggleSidebarCollapse = () => {
@@ -144,44 +183,98 @@ const Sidebar = () => {
   };
 
   return (
-    <div
-      className={`sticky top-0 left-0 z-10 flex flex-col justify-between h-screen pb-2 bg-bg-contrastDefault transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-56'}`}
-    >
-      <div>
-        <LogoBlock isSidebarCollapsed={isSidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} />
-        <div
-          className="flex gap-4 py-3 pl-5 pr-4 cursor-pointer text-text-secondary hover:bg-bg-contrastHover"
-          onClick={() => setIsTenantCollapsed(!isTenantCollapsed)}
-        >
-          <ChevronUpIcon className={`size-6 ${isTenantCollapsed ? 'transform rotate-180' : ''}`} />
-          {!isSidebarCollapsed && (
-            <div className="flex flex-col w-full py-0.5 gap-1 ">
-              <span className="text-text-primary text-sm-semibold">Tenant</span>
-              <span className="text-sm">Starter</span>
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        className="fixed z-50 p-2 rounded-lg top-4 right-4 bg-bg-contrastDefault md:hidden"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        {isMobileMenuOpen ? (
+          <XMarkIcon className="size-6 text-text-primary" />
+        ) : (
+          <Bars3Icon className="size-6 text-text-primary" />
+        )}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && <div className="fixed inset-0 z-30 bg-black bg-opacity-50 md:hidden" />}
+
+      <div
+        ref={sidebarRef}
+        className={`fixed md:sticky top-0 left-0 z-40 flex flex-col justify-between h-screen pb-2 bg-bg-contrastDefault transition-all duration-300 
+          ${isSidebarCollapsed ? 'w-20' : 'w-56'}
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+      >
+        <div>
+          <LogoBlock isSidebarCollapsed={isSidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} />
+          <div
+            className="flex gap-4 py-3 pl-5 pr-4 cursor-pointer text-text-secondary hover:bg-bg-contrastHover"
+            onClick={() => setIsTenantCollapsed(!isTenantCollapsed)}
+          >
+            <ChevronUpIcon className={`size-6 ${isTenantCollapsed ? 'transform rotate-180' : ''}`} />
+            {!isSidebarCollapsed && (
+              <div className="flex flex-col w-full py-0.5 gap-1">
+                <span className="text-text-primary text-sm-semibold">Tenant</span>
+                <span className="text-sm">Starter</span>
+              </div>
+            )}
+            {!isSidebarCollapsed && <ArrowTopRightOnSquareIcon className="size-6 hover:text-text-primary" />}
+          </div>
+          {!isTenantCollapsed && (
+            <div>
+              {menuItems.map(({ title, iconSolid, iconOutline, route }) => (
+                <Link to={route} key={title}>
+                  <MenuRow
+                    title={title}
+                    icon={selectedMenu === title ? iconSolid : iconOutline}
+                    selected={selectedMenu === title}
+                    onClick={() => handleMenuClick(title)}
+                    isSidebarCollapsed={isSidebarCollapsed}
+                  />
+                </Link>
+              ))}
             </div>
           )}
-          {!isSidebarCollapsed && <ArrowTopRightOnSquareIcon className="size-6 hover:text-text-primary" />}
-        </div>
-        {!isTenantCollapsed && (
-          <div>
-            {menuItems.map(({ title, iconSolid, iconOutline, route }) => (
-              <Link to={route} key={title}>
+          <div className="mt-4">
+            {networkMenuItems.map(({ title, iconSolid, iconOutline, route, rightIcon }) => {
+              if (title === 'Networks') {
+                return (
+                  <div key={title} className="relative">
+                    <MenuRow
+                      title={title}
+                      icon={selectedMenu === title ? iconSolid : iconOutline}
+                      selected={selectedMenu === title}
+                      onClick={() => {
+                        handleMenuClick(title);
+                        setIsNetworkDropdownOpen(!isNetworkDropdownOpen);
+                      }}
+                      rightIcon="ellipsis"
+                      isSidebarCollapsed={isSidebarCollapsed}
+                    />
+                    <NetworkDropdown
+                      isOpen={isNetworkDropdownOpen}
+                      onClose={() => setIsNetworkDropdownOpen(false)}
+                      setIsAddNetworkModalOpen={setIsAddNetworkModalOpen}
+                      isSidebarCollapsed={isSidebarCollapsed}
+                    />
+                  </div>
+                );
+              }
+
+              return route ? (
+                <Link to={route} key={title}>
+                  <MenuRow
+                    title={title}
+                    icon={selectedMenu === title ? iconSolid : iconOutline}
+                    selected={selectedMenu === title}
+                    onClick={() => handleMenuClick(title)}
+                    rightIcon={rightIcon as 'ellipsis' | 'plus' | undefined}
+                    isSidebarCollapsed={isSidebarCollapsed}
+                  />
+                </Link>
+              ) : (
                 <MenuRow
-                  title={title}
-                  icon={selectedMenu === title ? iconSolid : iconOutline}
-                  selected={selectedMenu === title}
-                  onClick={() => handleMenuClick(title)}
-                  isSidebarCollapsed={isSidebarCollapsed}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
-        <div className="mt-4">
-          {networkMenuItems.map(({ title, iconSolid, iconOutline, route, rightIcon }) =>
-            route ? (
-              <Link to={route} key={title}>
-                <MenuRow
+                  key={title}
                   title={title}
                   icon={selectedMenu === title ? iconSolid : iconOutline}
                   selected={selectedMenu === title}
@@ -189,28 +282,39 @@ const Sidebar = () => {
                   rightIcon={rightIcon as 'ellipsis' | 'plus' | undefined}
                   isSidebarCollapsed={isSidebarCollapsed}
                 />
-              </Link>
-            ) : (
-              <MenuRow
-                key={title}
-                title={title}
-                icon={selectedMenu === title ? iconSolid : iconOutline}
-                selected={selectedMenu === title}
-                onClick={() => handleMenuClick(title)}
-                rightIcon={rightIcon as 'ellipsis' | 'plus' | undefined}
-                isSidebarCollapsed={isSidebarCollapsed}
-              />
-            ),
-          )}
+              );
+            })}
+          </div>
         </div>
+        <div className="relative">
+          <MenuRow
+            title={store.username as string}
+            icon={<UserCircleIcon className="size-6" />}
+            rightIcon="ellipsis"
+            isSidebarCollapsed={isSidebarCollapsed}
+            onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+          />
+          <AccountDropdown
+            isOpen={isAccountDropdownOpen}
+            onClose={() => setIsAccountDropdownOpen(false)}
+            isSidebarCollapsed={isSidebarCollapsed}
+          />
+        </div>
+        <AddNetworkModal
+          isOpen={isAddNetworkModalOpen}
+          onCreateNetwork={() => {
+            setIsAddNetworkModalOpen(false);
+          }}
+          onCancel={() => setIsAddNetworkModalOpen(false)}
+          autoFillButtonRef={autoFillButtonRef}
+          networkNameInputRef={networkNameInputRef}
+          ipv4InputRef={ipv4InputRef}
+          ipv6InputRef={ipv6InputRef}
+          defaultAclInputRef={defaultAclInputRef}
+          submitButtonRef={submitButtonRef}
+        />
       </div>
-      <MenuRow
-        title="oleg@netmaker.io"
-        icon={<UserCircleIcon className="size-6" />}
-        rightIcon="ellipsis"
-        isSidebarCollapsed={isSidebarCollapsed}
-      />
-    </div>
+    </>
   );
 };
 
